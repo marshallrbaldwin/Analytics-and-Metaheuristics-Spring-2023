@@ -1,0 +1,50 @@
+#clear memory
+reset;
+
+#choose solver;
+option solver cplex;
+
+#create sets to define variables
+set Years = {1,2,3}; #years for bank investments
+set ProjectIDs = {1,2,3,4,5}; #ID corresponding to each project: 1=A, 2=B,..., 5=E
+
+#define parameters
+param riskCoeff {i in ProjectIDs}; #risk per dollar invested for each project
+param initInv; #initial investment amount in dollars
+
+#Set problem variables
+var x {i in ProjectIDs} >= 0; #dollars invested in project i
+var xb {i in Years} >= 0; #dollars invested in bank for year i
+var investment_return = x[2] + 1.4*x[5] + 1.75*x[4] + 1.06*xb[3] - initInv;
+
+#the following are specified by Fig. 1 in the homework PDF
+
+#set objective function
+minimize totalRisk: sum{i in ProjectIDs} x[i] * riskCoeff[i];
+
+#specify constraints
+s.t. c1: x[1] + x[3] + x[4] + xb[1] = initInv;
+s.t. c2: .3*x[1] + 1.1*x[3] + 1.06 * xb[1] = x[2] + xb[2];
+s.t. c3: x[1] + .3*x[2] + 1.06*xb[2] = x[5] + xb[3];
+
+#add project investment limits (see HW2)
+s.t. limA: x[1] <= 500000;
+s.t. limB: x[2] <= 500000;
+s.t. limE: x[5] <= 750000;
+
+#read in data from data file
+data HW4/data_Q1a_ii.txt;
+
+#solve the model (no need to access data since it is hard-coded already)
+solve;
+
+#display the resulting investment return and investments
+printf "Solving the model we can see that the following investment return can be made: \n";
+display investment_return;
+
+printf "The total risk accrued is: \n";
+display totalRisk;
+
+printf "This is done using the following investments: \n";
+display x;
+display xb;
