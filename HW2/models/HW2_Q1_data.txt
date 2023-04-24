@@ -1,0 +1,9 @@
+set Products := raisins juice jelly;
+
+param:  demand     weight   price   A_prop:=
+raisins 999999999  6.5      8.29    .75
+juice   190000     14       16.2    .25
+jelly   210000     18       13.89   0;
+
+param A_grapes := 930000; #values calculated by hand
+param B_grapes := 5270000;

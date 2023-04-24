@@ -1,0 +1,143 @@
+#Group 22, DSA 5113, Spring 2023
+
+# Titan Enterprises Case Study
+
+reset;
+
+#set-up options
+
+option solver cplex;
+option cplex_options 'sensitivity';
+
+#parameters and sets
+
+param init_Inv;           # initial investments in 2021
+param Aint;               # interest rate of project A
+param Bint;               # interest rate of project B
+param Cint;               # interest rate of project C
+param Dint;               # interest rate of project D
+param Eint;               # interest rate of project E
+param BKint;              # interest rate of Bank savings
+
+#decision variables
+
+var xA >= 0;              # investments in project A
+var xB >= 0;              # investments in project B
+var xC >= 0;              # investments in project C
+var xD >= 0;              # investments in project D
+var xE >= 0;              # investments in project E
+var xBK1 >= 0;            # saving in the Bank in 2021
+var xBK2 >= 0;            # saving in the Bank in 2022
+var xBK3 >= 0;            # saving in the Bank in 2023
+
+#objective
+
+maximize Profit: xB * 1 + xD * (1 + Dint) + xE * (1 + Eint) + 
+				 xBK3 * (1 + BKint) - init_Inv;
+		# overall investment profits at the beginning of 2024
+
+#constraints
+
+# investment limitations
+subject to A_limit: xA <= 600000;
+subject to B_limit: xB <= 500000;
+subject to E_limit: xE <= 750000;
+
+subject to 2021_Inv: init_Inv = xA + xC + xD + xBK1;
+subject to 2022_Inv: xA * Aint + xC * (1 + Cint) + xBK1 * (1 + BKint) = xB + xBK2;
+subject to 2023_Inv: xA * 1 + xB * Bint + xBK2 * (1 + BKint) = xE + xBK3;
+
+#data file
+#data Q2a.dat;
+data 'C:/Users/CC0481/OneDrive - AT&T Services, Inc/University of Oklahoma/DSA_5113/HW/HW#2/Q2a.dat'; 
+
+solve;
+
+display Profit;
+
+display xA, xB, xC, xD, xE, xBK1, xBK2, xBK3;
+
+/* AMPL Execution
+ampl: model Q2a.txt;
+CPLEX 20.1.0.0: sensitivity
+CPLEX 20.1.0.0: optimal solution; objective 797600
+4 dual simplex iterations (3 in phase I)
+
+suffix up OUT;
+suffix down OUT;
+suffix current OUT;
+Profit = 797600
+
+xA = 5e+05
+xB = 0
+xC = 0
+xD = 5e+05
+xE = 659000
+xBK1 = 0
+xBK2 = 150000
+xBK3 = 0
+*/
+/* Sensitivity - shadow price
+ampl: display A_limit, A_limit.down, A_limit.up;
+A_limit = 0.0952
+A_limit.down = 0
+A_limit.up = 0
+
+ampl: display B_limit, B_limit.down, B_limit.up;
+B_limit = 0
+B_limit.down = 0
+B_limit.up = 0
+
+ampl: display E_limit, E_limit.down, E_limit.up;
+E_limit = 0
+E_limit.down = 0
+E_limit.up = 0
+
+# 550,000 limit in A
+ampl: display A_limit, A_limit.down, A_limit.up;
+A_limit = 0.0952
+A_limit.down = 0
+A_limit.up = 0
+
+ampl: display B_limit, B_limit.down, B_limit.up;
+B_limit = 0
+B_limit.down = 0
+B_limit.up = 0
+
+ampl: display E_limit, E_limit.down, E_limit.up;
+E_limit = 0
+E_limit.down = 0
+E_limit.up = 0
+
+# 600,000 limit in A
+ampl: display A_limit, A_limit.down, A_limit.up;
+A_limit = 0
+A_limit.down = 0
+A_limit.up = 0
+
+ampl: display B_limit, B_limit.down, B_limit.up;
+B_limit = 0
+B_limit.down = 0
+B_limit.up = 0
+
+ampl: display E_limit, E_limit.down, E_limit.up;
+E_limit = 0.0722307
+E_limit.down = 0
+E_limit.up = 0
+
+
+ampl: display 2021_Inv, 2021_Inv.up, 2021_Inv.down;
+2021_Inv = -1.75
+2021_Inv.up = -5e+05
+2021_Inv.down = -1e+20
+
+ampl: display 2022_Inv, 2022_Inv.up, 2022_Inv.down;
+2022_Inv = -1.484
+2022_Inv.up = 150000
+2022_Inv.down = -85849.1
+
+ampl: display 2023_Inv, 2023_Inv.up, 2023_Inv.down;
+2023_Inv = -1.4
+2023_Inv.up = 659000
+2023_Inv.down = -91000
+*/

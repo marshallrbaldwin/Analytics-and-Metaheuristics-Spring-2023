@@ -1,0 +1,178 @@
+#Group 22, DSA 5113, Spring 2023
+
+# Titan Enterprises Case Study
+# adding investment F and G
+
+reset;
+
+#set-up options
+
+option solver cplex;
+option cplex_options 'sensitivity';
+
+#parameters and sets
+
+param init_Inv;           # initial investments in 2021
+param Aint;               # interest rate of project A
+param Bint;               # interest rate of project B
+param Cint;               # interest rate of project C
+param Dint;               # interest rate of project D
+param Eint;               # interest rate of project E
+param BKint;              # interest rate of Bank savings
+
+param Fint1;              # 1st interest rate of project F
+param Fint2;              # 2nd interest rate of project F
+#param Gint1;              # 1st interest rate of project G
+#param Gint2;              # 2nd interest rate of project G
+
+#decision variables
+
+var xA >= 0;              # investments in project A
+var xB >= 0;              # investments in project B
+var xC >= 0;              # investments in project C
+var xD >= 0;              # investments in project D
+var xE >= 0;              # investments in project E
+var xBK1 >= 0;            # saving in the Bank in 2021
+var xBK2 >= 0;            # saving in the Bank in 2022
+var xBK3 >= 0;            # saving in the Bank in 2023
+
+var xF >= 0;              # investments in project F
+#var xG >= 0;              # investments in project G
+
+#objective
+
+# investment F only
+maximize Profit: xB * 1 + xD * (1 + Dint) + xE * (1 + Eint) + 
+				 xBK3 * (1 + BKint) - init_Inv;
+/*
+# investment G only as well as F & G both available
+maximize Profit: xB * 1 + xD * (1 + Dint) + xE * (1 + Eint) + 
+				 xG * Gint2 + xBK3 * (1 + BKint) - init_Inv;
+		# overall investment profits at the beginning of 2024
+*/
+#constraints
+
+# investment limitations
+subject to A_limit: xA <= 500000;
+subject to B_limit: xB <= 500000;
+subject to E_limit: xE <= 750000;
+
+# investment F only
+subject to 2021_Inv: init_Inv = xA + xC + xD + xF + xBK1;
+subject to 2022_Inv: xA * Aint + xC * (1 + Cint) + xF * Fint1 +
+					 xBK1 * (1 + BKint) = xB + xBK2;
+subject to 2023_Inv: xA * 1 + xB * Bint + xF * Fint2 + 
+					 xBK2 * (1 + BKint) = xE + xBK3;
+/*
+# investment G only
+subject to 2021_Inv: init_Inv = xA + xC + xD + xG + xBK1;
+subject to 2022_Inv: xA * Aint + xC * (1 + Cint) + xG * (1 + Gint1) +
+					 xBK1 * (1 + BKint) = xB + xBK2;
+subject to 2023_Inv: xA * 1 + xB * Bint + xBK2 * (1 + BKint) = xE + xBK3;
+
+# investment F & G
+subject to 2021_Inv: init_Inv = xA + xC + xD + xF + xG + xBK1;
+subject to 2022_Inv: xA * Aint + xC * (1 + Cint) + xF * Fint1 + 
+					 xG * (1 + Gint1) + xBK1 * (1 + BKint) = xB + xBK2;
+subject to 2023_Inv: xA * 1 + xB * Bint + xF * Fint2 + 
+					 xBK2 * (1 + BKint) = xE + xBK3;
+*/
+#data file
+data Q2d.dat;
+
+solve;
+
+display Profit;
+
+# investment F only
+display xA, xB, xC, xD, xE, xF, xBK1, xBK2, xBK3;
+/*
+# investment G only
+display xA, xB, xC, xD, xE, xG, xBK1, xBK2, xBK3;
+
+# investment F & G
+display xA, xB, xC, xD, xE, xF, xG, xBK1, xBK2, xBK3;
+*/
+/* AMPL Execution
+# investment F Only
+ampl: model Q2d.txt;
+CPLEX 20.1.0.0: sensitivity
+CPLEX 20.1.0.0: optimal solution; objective 802311.2481
+5 dual simplex iterations (3 in phase I)
+
+suffix up OUT;
+suffix down OUT;
+suffix current OUT;
+Profit = 802311
+
+xA = 5e+05
+xB = 0
+xC = 0
+xD = 429892
+xE = 750000
+xF = 70107.9
+xBK1 = 0
+xBK2 = 206086
+xBK3 = 0
+*/
+/* AMPL Execution
+# investment G Only
+ampl: model Q2d.txt;
+CPLEX 20.1.0.0: sensitivity
+CPLEX 20.1.0.0: optimal solution; objective 800128.6449
+3 dual simplex iterations (2 in phase I)
+
+suffix up OUT;
+suffix down OUT;
+suffix current OUT;
+Profit = 800129
+
+xA = 5e+05
+xB = 0
+xC = 0
+xD = 421955
+xE = 750000
+xG = 78044.6
+xBK1 = 0
+xBK2 = 235849
+xBK3 = 0
+*/
+/* AMPL Execution
+# investment F & G
+ampl: model Q2d.txt;
+CPLEX 20.1.0.0: sensitivity
+CPLEX 20.1.0.0: optimal solution; objective 802311.2481
+3 dual simplex iterations (2 in phase I)
+
+suffix up OUT;
+suffix down OUT;
+suffix current OUT;
+Profit = 802311
+
+xA = 5e+05
+xB = 0
+xC = 0
+xD = 429892
+xE = 750000
+xF = 70107.9
+xG = 0
+xBK1 = 0
+xBK2 = 206086
+xBK3 = 0
+*/
+/* Sensitivity - shadow price
+ampl: display 2021_Inv, 2021_Inv.up, 2021_Inv.down;
+2021_Inv = -1.75
+2021_Inv.up = -570108
+2021_Inv.down = -1e+20
+
+ampl: display 2022_Inv, 2022_Inv.up, 2022_Inv.down;
+2022_Inv = -1.42912
+2022_Inv.up = 526415
+2022_Inv.down = -85849.1
+
+ampl: display 2023_Inv, 2023_Inv.up, 2023_Inv.down;
+2023_Inv = -1.34823
+2023_Inv.up = 558000
+2023_Inv.down = -91000
+*/

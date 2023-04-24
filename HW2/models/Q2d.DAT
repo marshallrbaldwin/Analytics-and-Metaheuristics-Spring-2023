@@ -1,0 +1,20 @@
+#Group 22, DSA 5113, Spring 2023
+
+# Titan Enterprises Case Study
+# Adding investment F and G
+
+param init_Inv := 1000000;         # initial investments in 2021
+
+param Aint  := 0.30;               # interest rate of project A
+param Bint  := 0.30;               # interest rate of project B
+param Cint  := 0.10;               # interest rate of project C
+param Dint  := 0.75;               # interest rate of project D
+param Eint  := 0.40;               # interest rate of project E
+param BKint := 0.06;               # interest rate of Bank savings
+
+param Fint1  := 0.80;              # interest rate of project F
+param Fint2  := 0.45;              # interest rate of project F
+#param Gint1  := 0.10;              # interest rate of project G
+#param Gint2  := 0.15;              # interest rate of project G
+
+data;

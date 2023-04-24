@@ -1,0 +1,79 @@
+#Group 22, DSA 5113, Spring 2023
+
+# Titan Enterprises Case Study
+# Investment change in D & E
+
+reset;
+
+#set-up options
+
+option solver cplex;
+option cplex_options 'sensitivity';
+
+#parameters and sets
+
+param init_Inv;           # initial investments in 2021
+param Aint;               # interest rate of project A
+param Bint;               # interest rate of project B
+param Cint;               # interest rate of project C
+param Dint;               # interest rate of project D
+param Eint;               # interest rate of project E
+param BKint;              # interest rate of Bank savings
+
+#decision variables
+
+var xA >= 0;              # investments in project A
+var xB >= 0;              # investments in project B
+var xC >= 0;              # investments in project C
+var xD >= 0;              # investments in project D
+var xE >= 0;              # investments in project E
+var xBK1 >= 0;            # saving in the Bank in 2021
+var xBK2 >= 0;            # saving in the Bank in 2022
+var xBK3 >= 0;            # saving in the Bank in 2023
+
+#objective
+
+maximize Profit: xB * 1 + xD * (1 + Dint) + xE * (1 + Eint) + 
+				 xBK3 * (1 + BKint) - init_Inv;
+		# overall investment profits at the beginning of 2024
+
+#constraints
+
+# investment limitations
+subject to A_limit: xA <= 500000;
+subject to B_limit: xB <= 500000;
+subject to E_limit: xE <= 750000;
+
+subject to 2021_Inv: init_Inv = xA + xC + xD + xBK1;
+subject to 2022_Inv: xA * Aint + xC * (1 + Cint) + xBK1 * (1 + BKint) = xB + xBK2;
+subject to 2023_Inv: xA * 1 + xB * Bint + xBK2 * (1 + BKint) = xE + xBK3;
+
+#data file
+data Q2c.dat;
+
+solve;
+
+display Profit;
+
+display xA, xB, xC, xD, xE, xBK1, xBK2, xBK3;
+
+/* AMPL Execution
+ampl: model Q2c.txt;
+CPLEX 20.1.0.0: sensitivity
+CPLEX 20.1.0.0: optimal solution; objective 733060
+4 dual simplex iterations (3 in phase I)
+
+suffix up OUT;
+suffix down OUT;
+suffix current OUT;
+Profit = 733060
+
+xA = 5e+05
+xB = 0
+xC = 0
+xD = 5e+05
+xE = 659000
+xBK1 = 0
+xBK2 = 150000
+xBK3 = 0
+*/

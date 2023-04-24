@@ -1,0 +1,56 @@
+#clear memory
+reset;
+
+#choose solver;
+option solver cplex;
+
+#Set problem parameters
+set Products; #grape products: raisins, juice, and jelly
+
+param demand {p in Products}; #the maximum number of units that can be sold for each product
+param weight {p in Products}; #the weight in pounds of grapes required to make each product
+param price {p in Products}; #the selling price for each product
+param A_prop {p in Products} ; #the proportion of grade A per pound for each product to guarantee quality
+
+param A_grapes; #pounds of grade A grapes
+param B_grapes; #pounds of grade B grapes
+
+#Set variables to solve for
+var numProduct {p in Products}; #number of each product to manufacture
+var purchased_B_grapes <= 300000;
+var profits {p in Products} = numProduct[p] * price[p];
+var A_grape_remainder = A_grapes  - sum {p in Products} (A_prop[p] * weight[p] * numProduct[p]);
+var B_grape_remainder = B_grapes + purchased_B_grapes - sum {p in Products} ((1 - A_prop[p]) * weight[p] * numProduct[p]);
+
+
+#Set function to maximize
+maximize totalProfit: -purchased_B_grapes * .78 + sum {p in Products} numProduct[p] * price[p];
+
+#Set constraints
+s.t. nonNegative {p in Products}: numProduct[p] >= 0; #no such thing as negative product by assumption
+s.t. nonNegativePurchase: purchased_B_grapes >= 0;
+s.t. A_weightConstraint: sum {p in Products} (A_prop[p] * weight[p] * numProduct[p]) <= A_grapes;
+s.t. B_weightConstraint: sum {p in Products} ((1 - A_prop[p]) * weight[p] * numProduct[p]) <= B_grapes + purchased_B_grapes ;
+s.t. proportionBound {p in Products}: 0 <= A_prop[p] <= 1;
+s.t. demandConstraint {p in Products}: demand[p] >= numProduct[p];
+
+#load data in
+data HW2/HW2_Q1_data.txt
+
+#solve the model
+solve;
+
+#Display nicely
+printf "Solving the model we can see that the following number of each product should be made: \n";
+display numProduct;
+
+printf "This creates profits of: \n";
+display totalProfit;
+display profits;
+
+printf "The following amounts of grapes are leftover: \n";
+display A_grape_remainder;
+display B_grape_remainder;
+
+printf "The following amount of additional grade B grapes were purchased: \n";
+display purchased_B_grapes;
