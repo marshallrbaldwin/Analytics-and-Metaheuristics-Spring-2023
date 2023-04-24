@@ -1,0 +1,77 @@
+#clear memory
+reset;
+
+#choose solver;
+option solver cplex;
+
+#create sets to define variables within
+set Legs = {1,2,3,4,5}; #legs of flight plan
+
+#initialize non-variable parameters
+param default_fuel; #pounds of fuel in aircraft by default (must be restored after trip)
+param fuel_buffer; #pounds of extra fuel the aircraft must land with
+param fuel_lpg; #pounds of fuel contained in one gallon
+param f_cap; #maximum fuel (in pounds) the aircraft can carry
+param TO_Lim; #upper limit in pounds allowed for takeoff
+param L_Lim; #upper limit in pounds allowed for landing
+param p_wgt; #weight (in pounds) of a passenger
+param BOW; #basic operating weight of aircraft without fuel or passengers
+
+param Ppl {i in Legs}; #number of people on plane during each leg
+param Pr {i in Legs}; #price of fuelling before takeoff in dollars per gallon
+param RF {i in Legs}; #ramp fee for taking off
+param RF_thresh {i in Legs}; #minimum purchased fuel (in gallons) to waive ramp fee
+param FB {i in Legs}; #pounds of fuel burned during flight
+
+param huge_num = 1000000; #large number to use for integer programming constraint tricks
+
+#load parameter data
+data HW5/data_Q1a.txt;
+
+#initialize variables
+var F {i in Legs}; #gallons of fuel purchased before takeoff
+var TO_fuel {i in Legs}; #pounds of fuel before takeoff
+var TO_wgt {i in Legs}; #the weight of the aircraft (in pounds) at takeoff
+var L_wgt {i in Legs}; #the weight of the aircraft (in pounds) when landing
+var x {i in Legs} binary; #whether or not the ramp fee gets waived (0=waived, 1=paid)
+var cost {i in Legs}; #the cost of purchasing fuel and taking off
+var final_refuel_gal = (default_fuel - (TO_fuel[5] - FB[5])) / fuel_lpg; #gallons of fuel needed to refill to default after trip
+var final_refuel_cost = final_refuel_gal  * Pr[1]; #cost of refuelling to the default level
+
+#set objective function
+#sum of the cost at each leg plus the cost of the final refuelling
+minimize total_cost: final_refuel_cost + sum{i in Legs} cost[i];
+
+#specify constraints
+#constraints to calculate the value of variables dependent on other ones
+s.t. TO_fuel_init {i in Legs: i = 1}: TO_fuel[i] = default_fuel + F[i] * fuel_lpg;
+s.t. TO_fuel_calc {i in Legs: i > 1}: TO_fuel[i] = TO_fuel[i-1] - FB[i-1] + F[i] * fuel_lpg;
+s.t. TO_wgt_calc {i in Legs}: TO_wgt[i] = BOW + TO_fuel[i] + Ppl[i];
+s.t. L_wgt_calc {i in Legs}: L_wgt[i] = TO_wgt[i] - FB[i];
+s.t. cost_calc {i in Legs}: cost[i] = F[i] * Pr[i] + RF[i] * x[i];
+
+#limiting constraints
+s.t. TO_wgt_constr {i in Legs}: TO_wgt[i] <= TO_Lim; #takeoff weight must be under the maximum threshold
+s.t. L_wgt_constr {i in Legs}: L_wgt[i] <= L_Lim; #landing weight must be under the maximum threshold
+s.t. min_flight_fuel_constr {i in Legs}: TO_fuel[i] >= FB[i] + fuel_buffer; #fuel must be enough to finish leg and have extra in tank
+s.t. fuel_cap_constr {i in Legs}: TO_fuel[i] <= f_cap; #weight of fuel must be under the plane's max capacity
+s.t. no_selling {i in Legs}: F[i] >= 0; #no selling fuel to an airport!
+s.t. ramp_fee_waive_constr {i in Legs}: RF_thresh[i] <= F[i] + huge_num * x[i]; #if F[i] exceeds the threshold, the ramp fee can be waived
+
+#solve model
+solve;
+
+#display results of model nicely
+
+printf "\nSolving the model with the given constraints, we find that the minimal cost for the entire trip is:\n";
+display total_cost;
+
+printf "At each leg of the trip, we purchase the following gallons of fuel before takeoff:\n";
+display F;
+printf "These purchases mean we take off for each leg of the trip with the following pounds of fuel in the tank:\n";
+display TO_fuel;
+printf "Refilling after the trip, we purchase the following gallons of fuel:\n";
+display final_refuel_gal;
+
+
+

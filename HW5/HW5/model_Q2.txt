@@ -1,0 +1,35 @@
+#clear memory
+reset;
+
+#choose solver;
+option solver cplex;
+
+#set our sets
+set Animals; #the animals in our zoo
+set Edges within {Animals, Animals}; #pairs on animals that don't get along
+
+#set static parameters
+param N; #number of edges (the maximum number of colors)
+
+#define variables
+var C{i in 1..N} binary; #whether or not enclosure i is used
+var x{a in Animals, i in 1..N} binary; #whether animal a is assigned to enclosure i
+
+#objective function
+minimize number_of_enclosures: sum{i in 1..N} C[i];
+
+#constraints
+s.t. unique_assignment {a in Animals}: sum{i in 1..N} x[a, i] = 1; #each animal must be assigned to only one enclosure
+s.t. friends_only {(i,j) in Edges, k in 1..N}: x[i, k] + x[j, k] <= C[k]; #no animals sharing an edge can be in the same enclosure
+                                                                          #also if an animal is in enclosure k, C[k] must be 1
+
+#load data and solve
+data HW5/data_Q2.txt;
+solve;
+
+#nicely display results
+printf "\nSolving this model results in the following enclosure assignments for animals a-j:\n";
+display x;
+printf "Note that enclosures 4-12 are unused.\n";
+printf "Explicitly, the number of enclosures assigned is:\n";
+display number_of_enclosures;

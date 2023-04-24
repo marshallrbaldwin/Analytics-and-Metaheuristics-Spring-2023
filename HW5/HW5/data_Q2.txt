@@ -1,0 +1,5 @@
+set Animals := a b c d e f g h i j;
+set Edges := (a,b) (a,e) (a,j) (b,d) (b,g) (c,h)
+             (c,j) (d,f) (e,i) (f,j) (h,i) (i,j);
+
+param N := 12; #since there are 12 edges

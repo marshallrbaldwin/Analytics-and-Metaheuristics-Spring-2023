@@ -1,0 +1,16 @@
+param default_fuel := 7000;
+param fuel_buffer :=2500;
+param fuel_lpg := 6.7;
+param f_cap := 14000;
+param TO_Lim := 36400;
+param L_Lim := 31800;
+param p_wgt := 200;
+param BOW := 22800;
+
+
+param:  Ppl Pr   RF  RF_thresh FB:=
+1       4   4.00 0   0         5100
+2       6   8.32 800 600       2200 
+3       10  8.99 750 500       4700
+4       10  6.48 600 650       3800
+5       10  9.27 800 500       3600;
